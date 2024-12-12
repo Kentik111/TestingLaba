@@ -1,0 +1,92 @@
+C++ binary
+
+// Сериализация в бинарный формат
+    void serializeBinary(const string& filename) const {
+        ofstream out(filename, ios::binary);
+        if (!out) {
+            cerr << "Error opening file for writing: " << filename << endl;
+            return;
+        }
+
+        Node* current = front;
+        while (current != nullptr) {
+            size_t length = current->data.size();
+            out.write(reinterpret_cast<char*>(&length), sizeof(length));
+            out.write(current->data.c_str(), length);
+            current = current->next;
+        }
+
+        out.close();
+    }
+
+    // Десериализация из бинарного формата
+    void deserializeBinary(const string& filename) {
+        ifstream in(filename, ios::binary);
+        if (!in) {
+            cerr << "Error opening file: " << filename << endl;
+            return;
+        }
+
+        while (front != nullptr) {
+            pop();
+        }
+
+        while (in) {
+            size_t length;
+            if (!in.read(reinterpret_cast<char*>(&length), sizeof(length))) break;
+            string data(length, '\0');
+            if (!in.read(&data[0], length)) break;
+            push(data);
+        }
+
+        in.close();
+    }
+    
+    
+    Go binary
+    
+    func (q *Queue) serializeBinary(filename string) {
+	file, err := os.Create(filename)
+	if err != nil {
+		fmt.Println("Error opening file for writing:", filename)
+		return
+	}
+	defer file.Close()
+
+	current := q.head
+	for current != nil {
+		len := uint64(len(current.person))
+		binary.Write(file, binary.LittleEndian, len)
+		file.Write([]byte(current.person))
+		current = current.next
+	}
+}
+
+func (q *Queue) deserializeBinary(filename string) {
+	file, err := os.Open(filename)
+	if err != nil {
+		fmt.Println("Error opening file:", filename)
+		return
+	}
+	defer file.Close()
+
+	for q.head != nil {
+		q.pop()
+	}
+
+	for {
+		var length uint64
+		err := binary.Read(file, binary.LittleEndian, &length)
+		if err != nil {
+			break
+		}
+		buffer := make([]byte, length)
+		_, err = file.Read(buffer)
+		if err != nil {
+			break
+		}
+		q.push(string(buffer))
+	}
+}
+
+
